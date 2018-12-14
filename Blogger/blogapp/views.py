@@ -27,3 +27,8 @@ class CategoriesCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save()
+
+
+class CategoryEditDelete(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = serializers.CategoriesSerializer
+    queryset = models.Categories.objects.all()

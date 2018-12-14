@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from model_mommy import mommy
+from . import models
 
 class TestsSetUp(APITestCase):
     def setUp(self):
@@ -36,3 +37,15 @@ class CategoriesTests(TestsSetUp):
         unauthorized_client = APIClient()
         response = unauthorized_client.post(reverse('create_category'), {'name': 'testcategory'})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED )
+
+    def test_admin_can_edit_a_category(self):
+        mommy.make(models.Categories, name='testcategory2')
+        response = self.client.patch(reverse('category_details', kwargs={'pk': 1}), {'name': 'new category name'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual('new category name', response.data['name'])
+
+    def test_admin_can_delete_a_category(self):
+        mommy.make(models.Categories)
+        response = self.client.delete(reverse('category_details', kwargs={'pk': 1}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.data, None)
