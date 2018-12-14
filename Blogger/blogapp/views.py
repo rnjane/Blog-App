@@ -1,6 +1,7 @@
-from rest_framework import views, permissions, response, status
+from rest_framework import views, permissions, response, status, generics
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from . import serializers, models
 
 class LoginUser(views.APIView):
     permission_classes = (permissions.AllowAny,)
@@ -18,3 +19,11 @@ class LoginUser(views.APIView):
             token = Token.objects.create(user=user)
             return response.Response({'token': token.key},
                     status=status.HTTP_200_OK)
+
+
+class CategoriesCreateView(generics.ListCreateAPIView):
+    serializer_class = serializers.CategoriesSerializer
+    queryset = models.Categories.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save()
