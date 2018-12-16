@@ -16,7 +16,7 @@ class LoginUser(views.APIView):
             return response.Response({'error': 'Invalid Credentials'},
                         status=status.HTTP_401_UNAUTHORIZED)
         else:
-            token = Token.objects.create(user=user)
+            token, _ = Token.objects.get_or_create(user=user)
             return response.Response({'token': token.key},
                     status=status.HTTP_200_OK)
 
@@ -32,3 +32,17 @@ class CategoriesCreateView(generics.ListCreateAPIView):
 class CategoryEditDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = serializers.CategoriesSerializer
     queryset = models.Categories.objects.all()
+
+
+class ArticleCreate(generics.CreateAPIView):
+    serializer_class = serializers.ArticlesSerializer
+    queryset = models.Articles.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(writer=self.request.user)
+
+
+class ArticlesList(generics.ListAPIView):
+    permission_classes = (permissions.AllowAny, )
+    serializer_class = serializers.ArticlesSerializer
+    queryset = models.Articles.objects.all()
