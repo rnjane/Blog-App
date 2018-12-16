@@ -8,9 +8,10 @@ urlpatterns = [
 
     #categories related urls
     path('create-category/', views.CategoriesCreateView.as_view(), name='create_category'),
-    path('category-detail/<int:pk>/', views.CategoryEditDelete.as_view(), name='category_details'),
+    path('category/<int:pk>/', views.CategoryEditDelete.as_view(), name='category'), #this url covers for edit, delete and view single category
 
     #articles related urls
     path('create-article/', views.ArticleCreate.as_view(), name='create_article'),
     path('view-articles/', views.ArticlesList.as_view(), name='articles'),
+    path('article/<int:pk>', views.ArticleEditDeleteView.as_view(), name='article') #this url covers for edit, delete and view single article
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
