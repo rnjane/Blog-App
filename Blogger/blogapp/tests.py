@@ -16,6 +16,7 @@ class TestsSetUp(APITestCase):
         self.user = User.objects.get(username='testuser1')
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        self.client.post(reverse('create_category'), {'name': 'testingcategory'})
 
 
 class UserAuthTests(TestsSetUp):
@@ -34,6 +35,7 @@ class CategoriesTests(TestsSetUp):
     def test_admin_can_create_a_category(self):
         response = self.client.post(reverse('create_category'), {'name': 'testcategory'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual('testcategory', response.data['name'])
 
     def test_category_creation_requires_login(self):
         unauthorized_client = APIClient()
@@ -42,13 +44,13 @@ class CategoriesTests(TestsSetUp):
 
     def test_admin_can_edit_a_category(self):
         mommy.make(models.Categories, name='testcategory2')
-        response = self.client.patch(reverse('category_details', kwargs={'pk': 1}), {'name': 'new category name'})
+        response = self.client.patch(reverse('category', kwargs={'pk': 1}), {'name': 'new category name'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('new category name', response.data['name'])
 
     def test_admin_can_delete_a_category(self):
         mommy.make(models.Categories)
-        response = self.client.delete(reverse('category_details', kwargs={'pk': 1}))
+        response = self.client.delete(reverse('category', kwargs={'pk': 1}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)
 
@@ -64,12 +66,13 @@ class ArticlesTests(TestsSetUp):
         return temporary_image
 
     def test_admin_can_create_an_article(self):
-        response = self.client.post(reverse('create_article'), {'title': 'testarticle', 'image': self.get_temporary_image(), 'content': 'sample content here', 'category': 'tech'}, format='multipart')
+        response = self.client.post(reverse('create_article'), {'category': 'testingcategory', 'title': 'testarticle', 'image': self.get_temporary_image(), 'content': 'sample content here'}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual('testarticle', response.data['title'])
 
     def test_only_admin_can_create_an_article(self):
         non_admin_user = APIClient()
-        response = non_admin_user.post(reverse('create_article'), {'title': 'testarticle', 'content': 'sample content here', 'category': 'tech'})
+        response = non_admin_user.post(reverse('create_article'), {'title': 'testarticle', 'content': 'sample content here', 'image': self.get_temporary_image(), 'category': 'testingcategory'}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_admin_and_non_admin_users_can_view_articles(self):
@@ -78,3 +81,21 @@ class ArticlesTests(TestsSetUp):
         authenticated_response = self.client.get(reverse('articles'))
         self.assertEqual(unauthenticated_response.status_code, status.HTTP_200_OK)
         self.assertEqual(authenticated_response.status_code, status.HTTP_200_OK)
+
+    def test_an_admin_can_edit_an_article(self):
+        mommy.make(models.Articles, category='testingcategory')
+        response = self.client.patch(reverse('article', kwargs={'pk': 1}), {'title': 'new title'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual('new title', response.data['title'])
+
+    def test_an_admin_can_delete_an_article(self):
+        mommy.make(models.Articles, category='testingcategory')
+        response = self.client.delete(reverse('article', kwargs={'pk': 1}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.data, None)
+
+    def test_an_admin_can_view_a_single_blog(self):
+        mommy.make(models.Articles, category='testingcategory', title='hello')
+        response = self.client.get(reverse('article', kwargs={'pk': 1}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual('hello', response.data['title'])

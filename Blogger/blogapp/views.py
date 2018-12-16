@@ -46,3 +46,8 @@ class ArticlesList(generics.ListAPIView):
     permission_classes = (permissions.AllowAny, )
     serializer_class = serializers.ArticlesSerializer
     queryset = models.Articles.objects.all()
+
+
+class ArticleEditDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = serializers.ArticlesSerializer
+    queryset = models.Articles.objects.all()
