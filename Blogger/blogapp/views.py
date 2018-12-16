@@ -41,6 +41,7 @@ class ArticleCreate(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(writer=self.request.user)
 
+
 class ArticlesList(generics.ListAPIView):
     permission_classes = (permissions.AllowAny, )
     serializer_class = serializers.ArticlesSerializer
