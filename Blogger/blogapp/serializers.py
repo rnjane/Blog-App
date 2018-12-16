@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from . import models
 
-class UserSeializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
@@ -13,3 +13,10 @@ class CategoriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Categories
         fields = ['name']
+
+
+class ArticlesSerializer(serializers.ModelSerializer):
+    writer = serializers.ReadOnlyField(source='writer.username')
+    class Meta:
+        model = models.Articles
+        fields = ['title', 'writer', 'content', 'category', 'image']

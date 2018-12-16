@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from model_mommy import mommy
+import tempfile
+from PIL import Image
 from . import models
 
 class TestsSetUp(APITestCase):
@@ -36,7 +38,7 @@ class CategoriesTests(TestsSetUp):
     def test_category_creation_requires_login(self):
         unauthorized_client = APIClient()
         response = unauthorized_client.post(reverse('create_category'), {'name': 'testcategory'})
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_admin_can_edit_a_category(self):
         mommy.make(models.Categories, name='testcategory2')
@@ -49,3 +51,30 @@ class CategoriesTests(TestsSetUp):
         response = self.client.delete(reverse('category_details', kwargs={'pk': 1}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(response.data, None)
+
+
+class ArticlesTests(TestsSetUp):
+    '''Blogs related tests'''
+    def get_temporary_image(self):
+        '''create a temporary image for testing purposes'''
+        image = Image.new('RGB', (200, 200))
+        temporary_image = tempfile.NamedTemporaryFile(suffix='.jpg')
+        image.save(temporary_image, 'jpeg')
+        temporary_image.seek(0)
+        return temporary_image
+
+    def test_admin_can_create_an_article(self):
+        response = self.client.post(reverse('create_article'), {'title': 'testarticle', 'image': self.get_temporary_image(), 'content': 'sample content here', 'category': 'tech'}, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_only_admin_can_create_an_article(self):
+        non_admin_user = APIClient()
+        response = non_admin_user.post(reverse('create_article'), {'title': 'testarticle', 'content': 'sample content here', 'category': 'tech'})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_admin_and_non_admin_users_can_view_articles(self):
+        non_admin_user = APIClient()
+        unauthenticated_response = non_admin_user.get(reverse('articles'))
+        authenticated_response = self.client.get(reverse('articles'))
+        self.assertEqual(unauthenticated_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(authenticated_response.status_code, status.HTTP_200_OK)
