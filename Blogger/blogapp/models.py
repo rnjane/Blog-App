@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 class Categories(models.Model):
     name = models.CharField(max_length=30)
 
-    def __str__(self):
+    def __repr__(self):
         return self.name
 
 
@@ -15,5 +15,5 @@ class Articles(models.Model):
     writer = models.ForeignKey(User, related_name='articles', on_delete=models.CASCADE)
     category = models.CharField(max_length=40)
 
-    def __str__(self):
+    def __repr__(self):
         return self.title
